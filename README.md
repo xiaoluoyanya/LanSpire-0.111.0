@@ -72,9 +72,10 @@ That's it. The mod auto-configures on first launch.
 
 | Status | Details |
 |--------|---------|
-| ⚠️ **Game Version** | Built against STS2 v0.107.1 (gameplay testing ongoing) |
+| ⚠️ **Game Version** | STS2 **v0.107.1** and **v0.109.0** (compile-checked). Gameplay testing ongoing -- not a full co-op run verification on either version |
+| ✅ **Same-version peers** | Friends must use the **same STS2 version**. This mod does not bridge 0.107.x with 0.109.x |
 | ✅ **Mod Loader** | Requires game's built-in mod loader (`mods/` folder) |
-| ⚠️ **Game Updates** | Can break the mod. Check for updates after game patches |
+| ⚠️ **Game Updates** | Can break the mod. Message IDs follow the running game table, but renamed methods/fields still need a new build |
 
 ## Install
 
@@ -267,7 +268,7 @@ If Scan LAN returns empty even when your PC friend is hosting:
 <details>
 <summary><strong>Will this break when the game updates?</strong></summary>
 
-Possibly. The mod patches specific game methods that may change between updates. Always check for an updated build after the game patches. Built against v0.107.1.
+Possibly. Wire message IDs follow the running game's message table, so some protocol shifts (like v0.109.0) are absorbed automatically. Renamed methods, UI, or save APIs still need a new build. Compile-checked on v0.107.1 and v0.109.0; gameplay testing ongoing. Friends must match each other's STS2 version.
 </details>
 
 ## Uninstall
@@ -280,7 +281,9 @@ That's it. No registry entries, no background services.
 
 ## Known Issues
 
-- **Game updates can break this mod.** LanSpire patches specific game methods that may change between STS2 updates. If the mod stops working after a game patch, check [Releases](https://github.com/Madlezz/LanSpire/releases) for an updated build.
+- **Not fully playtested.** v0.107.1 and v0.109.0 are compile-checked. Full multiplayer gameplay (lobby through multi-act co-op) is still ongoing / incomplete.
+- **Different STS2 versions cannot play together.** Host and clients must share the same game version even when all use the latest LanSpire.
+- **Game updates can break this mod.** Message IDs track the live game table, but Harmony targets and private fields can still change. If the mod stops working after a game patch, check [Releases](https://github.com/Madlezz/LanSpire/releases).
 - **LAN Scan is PC-to-PC only.** It will not detect native Steam multiplayer rooms. Use Manual IP for VPN play.
 - **VPN route delays.** When using VPNs like ZeroTier or Tailscale, the first connection attempt may fail while routes are being established. The mod auto-retries, but if it still fails, try connecting again after a few seconds.
 - **Reflected field names.** The mod relies on private game internals accessed via reflection. A game update that renames these fields will cause silent failures logged in `godot.log`.

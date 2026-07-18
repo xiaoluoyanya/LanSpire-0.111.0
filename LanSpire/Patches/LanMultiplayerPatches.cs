@@ -5,8 +5,7 @@ public static partial class LanMultiplayerPatches
     public const ushort DefaultPort = 33771;
     private const int DefaultMaxPlayers = 4;
     private const int SteamMaxPlayers = 250;
-    private const int MessageTypeCount = 54;
-    public const string ModVersion = "v0.10.0";
+    public const string ModVersion = "v0.11.0";
 
     /// <summary>
     /// Log only when lan_debug_logging is true in config. Use for verbose
@@ -40,7 +39,23 @@ public static partial class LanMultiplayerPatches
     private static readonly Dictionary<PlatformType, Dictionary<ulong, string>> PlayerNameOverrides = new();
     private static readonly Dictionary<Type, int> StableMessageTypeIds = new();
     private static readonly Dictionary<int, Type> StableMessageIdTypes = new();
-    private static readonly string[] StableMessageTypeOrder =
+
+    /// <summary>
+    /// LanSpire-only messages appended after the game's INetMessageSubtypes.All
+    /// order so custom IDs stay past the vanilla range on every STS2 version.
+    /// </summary>
+    private static readonly string[] LanCustomMessageTypeOrder =
+    {
+        "LanSpire.Network.LanPlayerNameSyncMessage",
+        "LanSpire.Network.LanPassphraseMessage",
+        "LanSpire.Network.LanPingMessage",
+    };
+
+    /// <summary>
+    /// Fallback game message order (STS2 v0.107.1) used only if
+    /// INetMessageSubtypes.All cannot be read at runtime.
+    /// </summary>
+    private static readonly string[] FallbackGameMessageTypeOrder =
     {
         "MegaCrit.Sts2.Core.Multiplayer.Messages.Game.ActionEnqueuedMessage",
         "MegaCrit.Sts2.Core.Multiplayer.Messages.Game.CardRemovedMessage",
@@ -93,9 +108,6 @@ public static partial class LanMultiplayerPatches
         "MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby.PlayerLeftMessage",
         "MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby.PlayerReconnectedMessage",
         "MegaCrit.Sts2.Core.Multiplayer.Messages.Lobby.PlayerRejoinedMessage",
-        "LanSpire.Network.LanPlayerNameSyncMessage",
-        "LanSpire.Network.LanPassphraseMessage",
-        "LanSpire.Network.LanPingMessage",
     };
 
     public static void Apply(Harmony harmony)
@@ -503,21 +515,71 @@ public static partial class LanMultiplayerPatches
     private static void BuildMessageTypeMaps()
     {
         if (StableMessageTypeIds.Count > 0) return;
+
         var sts2Assembly = typeof(ActionEnqueuedMessage).Assembly;
         var lanAssembly = typeof(LanMultiplayerPatches).Assembly;
-        for (var index = 0; index < StableMessageTypeOrder.Length; index++)
+        var ordered = new List<Type>();
+        var source = "fallback-v0.107.1";
+
+        // Prefer the live game table so new STS2 versions (e.g. RestSiteSkippedMessage
+        // in v0.109.0) pick up the correct wire IDs without a hardcode bump.
+        var subtypesType = sts2Assembly.GetType(
+            "MegaCrit.Sts2.Core.Multiplayer.Serialization.INetMessageSubtypes");
+        var allProp = subtypesType?.GetProperty(
+            "All", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+        if (allProp?.GetValue(null) is System.Collections.IEnumerable all)
         {
-            var typeName = StableMessageTypeOrder[index];
-            var type = sts2Assembly.GetType(typeName) ?? lanAssembly.GetType(typeName);
+            foreach (var item in all)
+            {
+                if (item is Type type)
+                    ordered.Add(type);
+            }
+            if (ordered.Count > 0)
+                source = $"INetMessageSubtypes.All({ordered.Count})";
+        }
+
+        if (ordered.Count == 0)
+        {
+            foreach (var typeName in FallbackGameMessageTypeOrder)
+            {
+                var type = sts2Assembly.GetType(typeName);
+                if (type == null)
+                {
+                    PatchHelper.Log($"LAN message protocol type missing: {typeName}");
+                    continue;
+                }
+                ordered.Add(type);
+            }
+        }
+
+        var gameCount = ordered.Count;
+        foreach (var typeName in LanCustomMessageTypeOrder)
+        {
+            var type = lanAssembly.GetType(typeName);
             if (type == null)
             {
-                PatchHelper.Log($"LAN message protocol type missing: {typeName}");
+                PatchHelper.Log($"LAN custom message type missing: {typeName}");
+                continue;
+            }
+            ordered.Add(type);
+        }
+
+        for (var index = 0; index < ordered.Count; index++)
+        {
+            var type = ordered[index];
+            // Later duplicate names should not overwrite earlier game IDs.
+            if (StableMessageTypeIds.ContainsKey(type))
+            {
+                PatchHelper.Log($"LAN message protocol duplicate type skipped: {type.FullName}");
                 continue;
             }
             StableMessageTypeIds[type] = index;
             StableMessageIdTypes[index] = type;
         }
-        PatchHelper.Log($"Stable LAN message protocol mapped {StableMessageTypeIds.Count}/{MessageTypeCount} types.");
+
+        PatchHelper.Log(
+            $"Stable LAN message protocol mapped {StableMessageTypeIds.Count} types " +
+            $"(game={gameCount}, custom={ordered.Count - gameCount}, source={source}).");
     }
 
 

@@ -12,4 +12,5 @@ That's it. The mod auto-configures on first launch.
 Full documentation, FAQ, troubleshooting, and source code:
 https://github.com/Madlezz/LanSpire
 
-Built against STS2 v0.107.1.
+Supports STS2 v0.107.1 and v0.109.0 (compile-checked; gameplay testing ongoing).
+Friends must run the same game version as each other.
