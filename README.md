@@ -41,7 +41,7 @@ That's it. The mod auto-configures on first launch.
 |---------|-------------|
 | **Host & Join LAN** | Direct LAN connection via IP or auto-discovery scan |
 | **Auto-Discovery** | Click "Scan LAN" to find games on your network |
-| **Quick Rejoin** | Pin favorite host IP for one-click reconnect (separate from 5-entry history) |
+| **Pinned Host** | Pin a favorite host IP (e.g. VPN) for one-click reconnect, separate from the 5-entry history |
 | **Latency Display** | Ping indicator in top-right corner, updates every 2 seconds |
 
 ### Network & Compatibility
@@ -294,7 +294,7 @@ LanSpire adapts the LAN multiplayer protocol for PC, using Harmony patches to in
 
 - **Kept**: Message protocol, host/join logic, LAN join UI, player naming, save ID handling
 - **Replaced**: Platform-specific settings with file-based JSON configuration (`lan_config.json`)
-- **Added**: LAN auto-discovery, connection history, toast notifications, player count display, connection retry, timeout, VPN detection, Quick Rejoin
+- **Added**: LAN auto-discovery, connection history, pinned host, toast notifications, player count display, connection retry, timeout, VPN detection, update check
 
 ## Credits
 
