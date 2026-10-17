@@ -2,11 +2,11 @@
   "id": "LanSpire",
   "name": "LANSpire",
   "author": "Madlezz",
-  "description": "Play co-op over your local network or VPN. Host or join by IP:port with LAN auto-discovery. Works alongside Steam multiplayer. Message IDs follow the running STS2 version (tested compile surface: v0.107.1, v0.109.0).",
-  "version": "v0.11.0",
+  "description": "Play co-op over your local network or VPN. Host or join by IP:port with LAN auto-discovery. Fork of LanSpire by Madlezz, updated for STS2 v0.111.0 (NetHostGameService ctor change). Also adds the in-game LAN room IP popup.",
+  "version": "v0.11.1",
   "has_pck": false,
   "has_dll": true,
-  "min_game_version": "0.107.1",
+  "min_game_version": "0.111.0",
   "dependencies": [],
   "affects_gameplay": true
 }

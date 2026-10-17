@@ -19,7 +19,7 @@ public static partial class LanMultiplayerPatches
                     showReportBugButton: false));
                 return Task.CompletedTask;
     }
-            netService = new NetHostGameService();
+            netService = new NetHostGameService(PeerVersionInfo.LocalDefault());
             var error = netService.StartENetHost(DefaultPort, hostCapacity);
             if (!error.HasValue)
             {
@@ -95,7 +95,7 @@ public static partial class LanMultiplayerPatches
                     showReportBugButton: false));
                 return Task.CompletedTask;
     }
-            netService = new NetHostGameService();
+            netService = new NetHostGameService(PeerVersionInfo.LocalDefault());
             var error = netService.StartENetHost(DefaultPort, hostCapacity);
             if (!error.HasValue)
             {
@@ -315,13 +315,17 @@ public static partial class LanMultiplayerPatches
         // build their CanvasLayers; a shorter delay results in our
         // popup being covered by the game's own UI layers.
         var tree = Engine.GetMainLoop() as SceneTree;
-        tree?.CreateTimer(1.5).Timeout += () =>
+        var lanHostTimer = tree?.CreateTimer(1.5);
+        if (lanHostTimer != null)
         {
-            PatchHelper.Log("LAN host info timer fired - showing popup and button.");
-            var netAddresses = GetNetworkAddresses();
-            StartHostIpButton();
-            ShowHostIpPopup(DefaultPort, netAddresses);
-        };
+            lanHostTimer.Timeout += () =>
+            {
+                PatchHelper.Log("LAN host info timer fired - showing popup and button.");
+                var netAddresses = GetNetworkAddresses();
+                StartHostIpButton();
+                ShowHostIpPopup(DefaultPort, netAddresses);
+            };
+        }
     }
 
     private static void ShowHostIpPopup(ushort port, IReadOnlyList<NetworkHelpers.NetAddress> addresses)
